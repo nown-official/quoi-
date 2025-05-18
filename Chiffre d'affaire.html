@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Prévision du Chiffre d'Affaires - Chart.js</title>
+<style>
+  body {
+    background-color: #000;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    max-width: 800px;
+    margin: auto;
+  }
+  h1 {
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+  }
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #999;
+  }
+  input[type="number"],
+  input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    background: #222;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: #eee;
+    font-size: 1rem;
+    box-sizing: border-box;
+  }
+  .grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    margin-bottom: 2rem;
+  }
+  .total {
+    text-align: center;
+    font-size: 2rem;
+    color: #4ade80; /* vert clair */
+    font-weight: bold;
+    margin-bottom: 2rem;
+  }
+  .chart-container {
+    background: #111;
+    padding: 1rem;
+    border-radius: 12px;
+    border: 1px solid #444;
+  }
+</style>
+</head>
+<body>
+
+<h1>Prévision du Chiffre d'Affaires</h1>
+
+<div class="grid">
+  <div>
+    <label for="users">Nombre d'utilisateurs</label>
+    <input id="users" type="number" min="0" step="1" value="30" />
+  </div>
+  <div>
+    <label for="price">Prix unitaire (€)</label>
+    <input id="price" type="text" placeholder="ex: 9,95 ou 9.95" value="0" />
+  </div>
+  <div>
+    <label for="articles">Articles par utilisateur</label>
+    <input id="articles" type="number" min="0" step="1" value="1" />
+  </div>
+</div>
+
+<div class="total" id="total">Total estimé : 0,00 €</div>
+
+<div class="chart-container">
+  <canvas id="revenueChart" aria-label="Graphique des données" role="img"></canvas>
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const usersInput = document.getElementById('users');
+  const priceInput = document.getElementById('price');
+  const articlesInput = document.getElementById('articles');
+  const totalDiv = document.getElementById('total');
+
+  // Fonction pour parser le prix, accepte "," ou "."
+  function parsePrice(value) {
+    if (!value) return 0;
+    let normalized = value.replace(',', '.');
+    let parsed = parseFloat(normalized);
+    if (isNaN(parsed) || parsed < 0) return 0;
+    return parsed;
+  }
+
+  // Formattage français pour l'affichage
+  function formatNumberFr(num) {
+    return num.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  // Initialiser le graphique Chart.js
+  const ctx = document.getElementById('revenueChart').getContext('2d');
+  const chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ["Utilisateurs", "Prix par article (€)", "Articles/utilisateur", "Total (€)"],
+      datasets: [{
+        label: 'Valeurs',
+        data: [30, 0, 1, 0],
+        backgroundColor: ['#6366f1', '#6366f1', '#6366f1', '#4ade80'],
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            color: '#aaa'
+          },
+          grid: {
+            color: '#444',
+            borderColor: '#666'
+          }
+        },
+        x: {
+          ticks: {
+            color: '#aaa'
+          },
+          grid: {
+            display: false
+          }
+        }
+      },
+      plugins: {
+        legend: {
+          labels: { color: '#ccc' }
+        },
+        tooltip: {
+          backgroundColor: '#222',
+          titleColor: '#eee',
+          bodyColor: '#eee'
+        }
+      }
+    }
+  });
+
+  function update() {
+    let users = Number(usersInput.value);
+    if (isNaN(users) || users < 0) users = 0;
+
+    let price = parsePrice(priceInput.value);
+
+    let articles = Number(articlesInput.value);
+    if (isNaN(articles) || articles < 0) articles = 0;
+
+    const total = users * price * articles;
+
+    totalDiv.textContent = `Total estimé : ${formatNumberFr(total)} €`;
+
+    chart.data.datasets[0].data = [users, price, articles, total];
+    chart.update();
+  }
+
+  usersInput.addEventListener('input', update);
+  priceInput.addEventListener('input', update);
+  articlesInput.addEventListener('input', update);
+
+  update();
+</script>
+
+</body>
+</html>
